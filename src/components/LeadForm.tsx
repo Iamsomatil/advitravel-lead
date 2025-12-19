@@ -1,6 +1,5 @@
 import { useState, FormEvent } from 'react';
 import { Mail, Phone, User, Calendar, MessageSquare, Loader2 } from 'lucide-react';
-import { supabase, Lead } from '../lib/supabase';
 
 interface LeadFormProps {
   onSuccess: () => void;
@@ -35,11 +34,6 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
       const urlParams = new URLSearchParams(window.location.search);
       const source = urlParams.get('source') || 'organic';
 
-      const leadData: Lead = {
-        ...formData,
-        source,
-      };
-
       // Send data to Make.com webhook
       const webhookResponse = await fetch('https://hook.us2.make.com/7q8t8vj9jk3j8tfininoe7pvaq8av3ts', {
         method: 'POST',
@@ -60,16 +54,7 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
       });
 
       if (!webhookResponse.ok) {
-        console.warn('Webhook submission failed, but continuing with database save');
-      }
-
-      // Also save to Supabase as backup
-      const { error: submitError } = await supabase
-        .from('leads')
-        .insert([leadData]);
-
-      if (submitError) {
-        throw submitError;
+        throw new Error('Failed to submit form. Please try again.');
       }
 
       onSuccess();
